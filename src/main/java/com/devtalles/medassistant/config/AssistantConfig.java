@@ -1,6 +1,8 @@
 package com.devtalles.medassistant.config;
 
 import com.devtalles.medassistant.tools.AppointmentSearchTool;
+import com.devtalles.medassistant.tools.DoctorInfoTool;
+import com.devtalles.medassistant.tools.PatientInfoTool;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.google.genai.GoogleGenAiChatModel;
@@ -22,6 +24,8 @@ public class AssistantConfig {
     private Resource systemPromptResource;
 
     private final AppointmentSearchTool appointmentSearchTool;
+    private final DoctorInfoTool doctorInfoTool;
+    private final PatientInfoTool patientInfoTool;
 
     @Bean("geminiClient")
     ChatClient geminiClient(GoogleGenAiChatModel chatModel) throws IOException {
@@ -31,7 +35,7 @@ public class AssistantConfig {
 
         return ChatClient.builder(chatModel)
                 .defaultSystem(systemPrompt)
-                .defaultTools(appointmentSearchTool)
+                .defaultTools(appointmentSearchTool, doctorInfoTool, patientInfoTool)
                 .build();
     }
 
@@ -41,7 +45,7 @@ public class AssistantConfig {
                 .replace("{currentDate}", LocalDate.now().toString());
         return ChatClient.builder(chatModel)
                 .defaultSystem(systemPrompt)
-                .defaultTools(appointmentSearchTool)
+                .defaultTools(appointmentSearchTool, doctorInfoTool, patientInfoTool)
                 .build();
     }
 }
