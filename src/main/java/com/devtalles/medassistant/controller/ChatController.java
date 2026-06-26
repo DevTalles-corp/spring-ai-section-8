@@ -35,18 +35,22 @@ public class ChatController {
 
     @PostMapping(value = "/stream", produces = "text/event-stream; charset=UTF-8")
     public Flux<String> chatStream(
-            @RequestBody ChatRequest request
+            @RequestBody ChatRequest request,
+            @AuthenticationPrincipal Jwt jwt,
+            Authentication authentication
     ){
-        return assistantService.chatStream(request.prompt(), request.model());
+        Long userId = jwt.getClaim("userId");
+        String role = securityUtils.extractRole(authentication);
+        return assistantService.chatStream(request.prompt(), request.model(), userId, role);
     }
 
     @PostMapping("/explain")
-    private ResponseEntity<String> explainCondition(@Valid @RequestBody ChatRequest request){
+    public ResponseEntity<String> explainCondition(@Valid @RequestBody ChatRequest request){
         return ResponseEntity.ok(assistantService.explainCondition(request.prompt(), request.model()));
     }
 
     @PostMapping("/symptoms")
-    private ResponseEntity<String> analyzeSymptoms(@Valid @RequestBody ChatRequest request){
+    public ResponseEntity<String> analyzeSymptoms(@Valid @RequestBody ChatRequest request){
         return ResponseEntity.ok(assistantService.analyzeSymptoms(request.prompt(), request.model()));
     }
 

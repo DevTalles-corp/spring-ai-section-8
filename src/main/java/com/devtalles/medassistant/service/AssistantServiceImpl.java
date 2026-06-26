@@ -1,13 +1,10 @@
 package com.devtalles.medassistant.service;
 
 import com.devtalles.medassistant.config.ClientResolver;
-import com.devtalles.medassistant.tools.AppointmentSearchTool;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.prompt.PromptTemplate;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -62,11 +59,14 @@ public class AssistantServiceImpl implements AssistantService{
     }
 
     @Override
-    public Flux<String> chatStream(String prompt, String model) {
-        log.info("Stream request - modelo: {} ", model);
+    public Flux<String> chatStream(String prompt, String model, Long userId, String role) {
+        log.info("Stream request - modelo: {}, userId: {}", model, userId);
 
         return clientResolver.resolve(model)
-                .prompt(prompt).stream().content();
+                .prompt(prompt)
+                .toolContext(Map.of("userId", userId, "role", role))
+                .stream()
+                .content();
     }
 
     @Override
