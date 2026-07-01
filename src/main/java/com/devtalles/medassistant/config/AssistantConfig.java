@@ -6,6 +6,7 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
+import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.chroma.vectorstore.ChromaApi;
 import org.springframework.ai.chroma.vectorstore.ChromaVectorStore;
 import org.springframework.ai.embedding.EmbeddingModel;
@@ -55,8 +56,15 @@ public class AssistantConfig {
                 .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build(),
                         QuestionAnswerAdvisor.builder(vectorStore)
                                 .searchRequest(SearchRequest.builder()
-                                        .similarityThreshold(0.7).topK(3).build()
-                                ).build())
+                                        .similarityThreshold(0.7).topK(3).build())
+                                .promptTemplate(new PromptTemplate("""
+                Contexto de documentos médicos (usalo si es relevante para la pregunta):
+                {question_answer_context}
+                
+                Si la información no está en los documentos, podés usar tus herramientas
+                o tu conocimiento general para responder.
+                """))
+                                .build())
                 .build();
     }
 
@@ -77,6 +85,13 @@ public class AssistantConfig {
                                         .similarityThreshold(0.7)
                                         .topK(3)
                                         .build())
+                                .promptTemplate(new PromptTemplate("""
+                Contexto de documentos médicos (usalo si es relevante para la pregunta):
+                {question_answer_context}
+                
+                Si la información no está en los documentos, podés usar tus herramientas
+                o tu conocimiento general para responder.
+                """))
                                 .build())
                 .build();
     }
@@ -100,6 +115,15 @@ public class AssistantConfig {
                 .initializeSchema(true)
                 .build();
     }
+
+    @Bean
+    ChromaApi chromaApi(@Value("${spring.ai.vectorstore.chroma.url}") String chromaUrl){
+        return ChromaApi.builder()
+                .baseUrl(chromaUrl)
+                .build();
+    }
+
+
 }
 
 
