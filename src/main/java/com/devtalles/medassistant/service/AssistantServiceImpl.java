@@ -4,6 +4,7 @@ import com.devtalles.medassistant.config.ClientResolver;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.core.io.Resource;
@@ -40,8 +41,12 @@ public class AssistantServiceImpl implements AssistantService{
 
     private PromptTemplate consultationTemplate;
 
+    private final ChatMemory chatMemory;
+    private MessageChatMemoryAdvisor memoryAdvisor;
+
     @PostConstruct
     void init(){
+        memoryAdvisor = MessageChatMemoryAdvisor.builder(chatMemory).build();
         consultationTemplate = new PromptTemplate(consultationResource);
         diagnosisCotTemplate = new PromptTemplate(diagnosisCotResource);
         symptomAnalysisTemplate = new PromptTemplate(symptomAnalysisPrompt);
@@ -55,7 +60,8 @@ public class AssistantServiceImpl implements AssistantService{
         return clientResolver.resolve(model)
                 .prompt(prompt)
                 .toolContext(Map.of("userId", userId, "role", role))
-                .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, String.valueOf(userId)))
+                .advisors(a -> a.advisors(memoryAdvisor)
+                        .param(ChatMemory.CONVERSATION_ID, String.valueOf(userId)))
                 .call()
                 .content();
     }
@@ -67,7 +73,8 @@ public class AssistantServiceImpl implements AssistantService{
         return clientResolver.resolve(model)
                 .prompt(prompt)
                 .toolContext(Map.of("userId", userId, "role", role))
-                .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, String.valueOf(userId)))
+                .advisors(a -> a.advisors(memoryAdvisor)
+                        .param(ChatMemory.CONVERSATION_ID, String.valueOf(userId)))
                 .stream()
                 .content();
     }
